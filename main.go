@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/bitly/go-simplejson"
 )
 
 type goodTooth struct {
@@ -19,10 +20,12 @@ type goodTooth struct {
 }
 
 type clinic struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Telphone string `json:"telphone"`
-	Address  string `json:"address"`
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Telphone string  `json:"telphone"`
+	Address  string  `json:"address"`
+	Lat      float64 `json:"lat"`
+	Lng      float64 `json:"lng"`
 }
 
 const (
@@ -99,9 +102,40 @@ func (gt *goodTooth) getContent(query string) {
 		id := s.Find("td").Eq(0).Text()
 		telphone := s.Find("td").Eq(2).Text()
 		address := s.Find("td").Eq(3).Text()
-		c := clinic{id, name, telphone, address}
+		lat, lng := gt.getLocation(address)
+		c := clinic{id, name, telphone, address, lat, lng}
 		gt.Clinics = append(gt.Clinics, c)
 	})
+}
+
+func (gt *goodTooth) getLocation(address string) (float64, float64) {
+	key := "AIzaSyC5Jt97fYuZTCEIeti-JT24ac5v3o9ceRY"
+	query := fmt.Sprintf("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s", address, key)
+	res, err := http.Get(query)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+	}
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	js, err := simplejson.NewJson([]byte(data))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	lat, err := js.Get("results").GetIndex(0).Get("geometry").Get("location").Get("lat").Float64()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	lng, err := js.Get("results").GetIndex(0).Get("geometry").Get("location").Get("lng").Float64()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return lat, lng
 }
 
 func (gt *goodTooth) writeJSON() {

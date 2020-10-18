@@ -2,16 +2,56 @@
 <html>
 
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Title of the document</title>
-</head>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link href="https://unpkg.com/tabulator-tables@4.8.2/dist/css/bootstrap/tabulator_bootstrap4.min.css" rel="stylesheet">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+<script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC5Jt97fYuZTCEIeti-JT24ac5v3o9ceRY&callback=initMap"></script>
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.8.2/dist/js/tabulator.min.js"></script>
+<style type="text/css">
+/* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+#map {
+    height: 550px;
+    width: 100%;
+}
 
+#table {
+    width: 100%;
+}
+
+</style>
+</head>
 <body>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <iframe id="map" src="./map.html"></iframe>
+    </div>
+    <div class="row-fluid">
+        <div id="table"></div>
+    </div>
+</div>
 <script>
     var xhr = new XMLHttpRequest();
     xhr.open("GET", './data.json', true);
     xhr.send();
     var data = xhr.responseText;
-    console.log(data);
+    
+    var table = new Tabulator('#table', {
+        height:'350px',
+        columns:[
+            {title:"統編", field:"id", sorter:'number'},
+            {title:"名稱", field:"name"},
+            {title:"電話", field:"telphone"},
+            {title:"地址", field:"address"},
+        ],
+        data: data.clinics,
+        layout: "fitColumns",
+        pagination: "local",
+        paginationSize: 10,
+    });
 </script>
 </body>
 

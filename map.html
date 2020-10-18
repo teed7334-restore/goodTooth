@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Title of the document</title>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+<script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+<script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC5Jt97fYuZTCEIeti-JT24ac5v3o9ceRY&callback=initMap"></script>
+<style type="text/css">
+#map {
+    height: 100%;
+    /* The height is 400 pixels */
+    width: 100%;
+    /* The width is the width of the web page */
+    position: absolute;
+}
+
+</style>
+</head>
+<body>    
+<div id="map"></div>
+<script>
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", './data.json', true);
+    xhr.send();
+    var data = xhr.responseText;
+    
+    var locations = [];
+    var num = data.clinics.length;
+
+    for (let i = 0; i < num; i++) {
+        locations.push({
+           lat: data.clinics[i].lat,
+           lng: data.clinics[i].lng
+        });
+    }
+
+    function initMap() {
+        const el = document.getElementById('map')
+        const map = new google.maps.Map(el, {
+            zoom: 12,
+            center: {
+                lat: 25.1347637,
+                lng: 121.462405
+            }
+        });
+        const markers = locations.map((location, i) => {
+            return new google.maps.Marker({
+                position: location,
+                label: data.clinics[i].name
+            });
+        });
+        new MarkerClusterer(map, markers, {
+            imagePath:
+                "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+        });
+    }
+</script>
+</body>
+
+</html>
