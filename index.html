@@ -35,23 +35,26 @@
 </div>
 <script>
     var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            var data = JSON.parse(this.response);
+            var table = new Tabulator('#table', {
+                height:'350px',
+                columns:[
+                    {title:"統編", field:"id", sorter:'number'},
+                    {title:"名稱", field:"name"},
+                    {title:"電話", field:"telphone"},
+                    {title:"地址", field:"address"},
+                ],
+                data: data.clinics,
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+            });
+        }
+    }
     xhr.open("GET", './data.json', true);
     xhr.send();
-    var data = xhr.responseText;
-    
-    var table = new Tabulator('#table', {
-        height:'350px',
-        columns:[
-            {title:"統編", field:"id", sorter:'number'},
-            {title:"名稱", field:"name"},
-            {title:"電話", field:"telphone"},
-            {title:"地址", field:"address"},
-        ],
-        data: data.clinics,
-        layout: "fitColumns",
-        pagination: "local",
-        paginationSize: 10,
-    });
 </script>
 </body>
 
