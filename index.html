@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+<title>Title of the document</title>
+</head>
+
+<body>
+<script>
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", './data.json', true);
+    xhr.send();
+    var data = xhr.responseText;
+    console.log(data);
+</script>
+</body>
+
+</html>
