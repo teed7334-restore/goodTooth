@@ -58,6 +58,11 @@
                     imagePath:
                         "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
                 });
+
+                google.maps.event.addListener(markers, "click", function() {
+                    map.setZoom(map.getZoom() + 1);
+                    map.setCenter(map.getPosition());
+                });
             };
 
             // Append the 'script' element to 'head'
