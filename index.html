@@ -37,14 +37,20 @@
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (this.readyState === 4 && this.status === 200) {
-            var data = JSON.parse(this.response);
-            var table = new Tabulator('#table', {
+            let data = JSON.parse(this.response);
+            let nums = data.clinics.length
+            for (let i = 0; i < nums; i++) {
+                //data.clinics[i].note = data.clinics[i].note.replace(/\n/g, "<br />")
+            }
+            let table = new Tabulator('#table', {
                 height:'350px',
                 columns:[
                     {title:"統編", field:"id", sorter:'number'},
                     {title:"名稱", field:"name"},
                     {title:"電話", field:"telphone"},
                     {title:"地址", field:"address"},
+                    {title:"評分", field:"score"},
+                    {title:"記錄", field:"note", formatter:"textarea"}
                 ],
                 data: data.clinics,
                 layout: "fitColumns",
