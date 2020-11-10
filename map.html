@@ -20,57 +20,58 @@
 <body>    
 <div id="map"></div>
 <script>
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            var data = JSON.parse(this.responseText);
-            var num = data.clinics.length;
-            var locations = [];
-
-            for (let i = 0; i < num; i++) {
-                locations.push({
-                    lat: data.clinics[i].lat,
-                    lng: data.clinics[i].lng
-                });
-            }
-
-            var script = document.createElement('script');
-            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC5Jt97fYuZTCEIeti-JT24ac5v3o9ceRY&callback=initMap';
-            script.defer = true;
-
-            window.initMap = function() {
-                const el = document.getElementById('map');
-                const map = new google.maps.Map(el, {
-                    zoom: 12,
-                    center: {
-                        lat: 25.1347637,
-                        lng: 121.462405
-                    }
-                });
-
-                const markers = locations.map((location, i) => {
-                    return new google.maps.Marker({
-                        position: location,
-                        label: data.clinics[i].name
-                    });
-                });
-                new MarkerClusterer(map, markers, {
-                    imagePath:
-                        "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
-                });
-
-                google.maps.event.addListener(markers, "click", function() {
-                    map.setZoom(map.getZoom() + 1);
-                    map.setCenter(map.getPosition());
-                });
-            };
-
-            // Append the 'script' element to 'head'
-            document.head.appendChild(script);
-        }
+    //main 主程式
+    async function main() {
+        let response = await fetch('./data/clinics.json');
+        let clinics = await response.json();
+        generateMap(clinics);
     }
-    xhr.open("GET", './data.json', true);
-    xhr.send();
+    main();
+    
+    //generateMap 產生Google Map
+    function generateMap(clinics) {
+        let num = clinics.length;
+        let locations = [];
+
+        for (let i = 0; i < num; i++) {
+            locations.push({
+                lat: clinics[i].lat,
+                lng: clinics[i].lng
+            });
+        }
+
+        let script = document.createElement('script');
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC5Jt97fYuZTCEIeti-JT24ac5v3o9ceRY&callback=initMap';
+        script.defer = true;
+
+        window.initMap = function() {
+            const el = document.getElementById('map');
+            const map = new google.maps.Map(el, {
+                zoom: 12,
+                center: {
+                    lat: 25.1347637,
+                    lng: 121.462405
+                }
+            });
+
+            const markers = locations.map((location, i) => {
+                return new google.maps.Marker({
+                    position: location,
+                    label: clinics[i].name
+                });
+            });
+            new MarkerClusterer(map, markers, {
+                imagePath:
+                    "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+            });
+
+            google.maps.event.addListener(markers, "click", function() {
+                map.setZoom(map.getZoom() + 1);
+                map.setCenter(map.getPosition());
+            });
+        };
+        document.head.appendChild(script);
+    }
 </script>
 </body>
 

@@ -34,33 +34,156 @@
     </div>
 </div>
 <script>
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            let data = JSON.parse(this.response);
-            let nums = data.clinics.length
-            for (let i = 0; i < nums; i++) {
-                //data.clinics[i].note = data.clinics[i].note.replace(/\n/g, "<br />")
-            }
-            let table = new Tabulator('#table', {
-                height:'350px',
-                columns:[
-                    {title:"統編", field:"id", sorter:'number'},
-                    {title:"名稱", field:"name"},
-                    {title:"電話", field:"telphone"},
-                    {title:"地址", field:"address"},
-                    {title:"評分", field:"score"},
-                    {title:"記錄", field:"note", formatter:"textarea"}
-                ],
-                data: data.clinics,
-                layout: "fitColumns",
-                pagination: "local",
-                paginationSize: 10,
-            });
+    //main 主程式
+    async function main() {
+        let response = await fetch('./data/clinics.json');
+        const clinics = await response.json();
+        response = await fetch('./data/nearByClinics.json');
+        const nearByClinics = await response.json();
+        response = await fetch('./data/nearByMRTs.json');
+        const nearByMRTs = await response.json();
+        response = await fetch('./data/nearBySchools.json');
+        const nearBySchools = await response.json();
+        response = await fetch('./data/schools.json');
+        const schools = await response.json();
+        response = await fetch('./data.json');
+        const nearByMRTResponse = await calcNearMRTScore(nearBySchools);
+        const nearByClinicResponse = await calcNearClinicScore(nearByClinics, clinics);
+        const nearBySchoolResponse = await calcNearSchoolScore(nearBySchools, clinics);
+        let data = [];
+        let num = clinics.length;
+        for (let i = 0; i < num; i++) {
+            let row = clinics[i];
+            let params = {
+                id: row.id,
+                name: row.name,
+                telphone: row.telphone,
+                address: row.address,
+                score: 0,
+                note: ''
+            };
+            params.score += nearByMRTResponse[i].score;
+            params.score += nearByClinicResponse[i].score;
+            params.score += nearBySchoolResponse[i].score;
+            params.note += nearByMRTResponse[i].note;
+            params.note += nearByClinicResponse[i].note;
+            params.note += nearBySchoolResponse[i].note;
+            data.push(params);
         }
+        await generateTable(data);
     }
-    xhr.open("GET", './data.json', true);
-    xhr.send();
+    main();
+
+    //calcNearSchoolScore 計算附近是否有其他學校分數
+    function calcNearSchoolScore(nearBySchools, clinics) {
+        let response = [];
+        let num = clinics.length;
+        for (let i = 0; i < num; i++) {
+            let row = clinics[i];
+            let rooms = 0;
+            let nearNum = Object.keys(nearBySchools[i].distance).length;
+            for (let j = 0; j < nearNum; j++) {
+                if (i === j) {
+                    continue;
+                }
+                let distance = parseInt(nearBySchools[i].distance[j]);
+                if (distance <= 500) {
+                    rooms++;
+                }
+            }
+            if (rooms > 0) {
+                response[i] = {
+                    score: 3,
+                    note: `500m內有${rooms}間學校\n`
+                }
+            } else {
+                response[i] = {
+                    score: 2,
+                    note: "500m內無學校\n"
+                }
+            }
+        }
+        return response;
+    }
+
+    //calcNearClinicScore 計算附近是否有其它診所分數
+    function calcNearClinicScore(nearByClinics, clinics) {
+        let response = [];
+        let num = clinics.length;
+        for (let i = 0; i < num; i++) {
+            let row = clinics[i];
+            let rooms = 0;
+            let nearNum = Object.keys(nearByClinics[i].distance).length;
+            for (let j = 0; j < nearNum; j++) {
+                if (i === j) {
+                    continue;
+                }
+                let distance = parseInt(nearByClinics[i].distance[j]);
+                if (distance <= 500) {
+                    rooms++;
+                }
+            }
+            if (rooms >= 2) {
+                response[i] = {
+                    score: 1,
+                    note: `500m內有${rooms}家其它牙醫\n`
+                }
+            } else if (rooms === 1) {
+                response[i] = {
+                    score: 3,
+                    note: `500m內有${rooms}家其它牙醫\n`
+                }
+            } else {
+                response[i] = {
+                    score: 5,
+                    note: `500m內有${rooms}家其它牙醫\n`
+                }
+            }
+        }
+        return response;
+    }
+
+    //calcNearMRTScore 計算附近是否有捷運站分數
+    function calcNearMRTScore(nearByMRTs) {
+        let response = [];
+        let num = nearByMRTs.length;
+        for (let i = 0; i < num; i++) {
+            let row = nearByMRTs[i];
+            let distance = parseInt(row.distance);
+            if (distance <= 300) {
+                response[i] = {
+                    score: 5,
+                    note: "300m內有捷運站\n"
+                }
+            } else {
+                response[i] = {
+                    score: 3,
+                    note: "300m內無捷運站\n"
+                }
+            }
+        }
+        return response;
+    }
+    
+    //generateTable 生成表單
+    function generateTable(data) {
+        let nums = data.length
+        let table = new Tabulator('#table', {
+            height:'350px',
+            columns:[
+                {title:"統編", field:"id", sorter:'number'},
+                {title:"名稱", field:"name"},
+                {title:"電話", field:"telphone"},
+                {title:"地址", field:"address"},
+                {title:"評分", field:"score"},
+                {title:"記錄", field:"note", formatter:"textarea"}
+            ],
+            data: data,
+            layout: "fitColumns",
+            pagination: "local",
+            paginationSize: 10,
+        });
+    }
 </script>
 </body>
 
